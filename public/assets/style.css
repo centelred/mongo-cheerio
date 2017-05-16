@@ -1,0 +1,74 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body{
+ background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("../../images/newspaper-background.png");
+   background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+}
+.articles{
+background:linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
+
+}
+
+a:hover{
+ text-decoration: none;
+
+}
+
+a {
+  color: white;
+font-family: 'Arial', serif;
+  font-weight: 600;
+}
+
+.author{
+  text-align: center;
+}
+
+#curtis-shadow{
+  color: #333333;
+}
+
+#buttons{
+  font-family: 'Arial', serif;
+}
+
+
+.footer-area{
+  background-color: white;
+  height: 150px
+}
+
+h4{
+  color: white;
+  font-family: 'Arial', serif;
+}
+
+.jumbotron {
+  text-align: center;
+  font-family: 'Arial', serif;
+}
+
+.jumbotron h1{
+  margin-bottom: 40px;
+}
+
+
+/*--------------------------Sticky Footer--------------------*/
+
+.wrapper {
+  min-height: 100%;
+
+  /* Equal to height of footer */
+  /* But also accounting for potential margin-bottom of last child */
+  margin-bottom: -50px;
+}
+
+.footer,
+.push {
+  height: 50px;
