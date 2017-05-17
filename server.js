@@ -1,162 +1,144 @@
-// Dependencies
-var express = require("express");
-var bodyParser = require("body-parser");
-var logger = require("morgan");
-var mongoose = require("mongoose");
-
-// Require note and article
-var Note = require("./model/note.js");
-var Article = require("./model/article.js");
-
-// Scrape tools
-var request = require("request");
-var cheerio = require("cheerio");
-var path = require('path');
-
-// Initialize Express
+////////////////////////////////////////////////
+////////////////dependencies////////////////////
+////////////////////////////////////////////////
+var express = require('express');
 var app = express();
-
-// Set mongoose to leverage built in JavaScript ES6 Promises
-mongoose.Promise = Promise;
-
-// Use handlebars
-var exphbs = require('express-handlebars');
-app.engine("handlebars", exphbs({
-  defaultLayout: 'main'
-}));
-app.set("view engine", "handlebars");
-
-
-// Use morgan and body parser with our app
-app.use(logger("dev"));
+var bodyParser = require('body-parser');
+var logger = require('morgan');
+var mongoose = require('mongoose');
+////////////////////////////////////////////////
+///////////////scraping tools///////////////////
+////////////////////////////////////////////////
+var request = require('request');
+var cheerio = require('cheerio');
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+//use morgan and body parser
+app.use(logger('dev'));
 app.use(bodyParser.urlencoded({
   extended: false
 }));
 
-// Make public a static dir
-app.use(express.static("/public"));
+//static public dir
+app.use(express.static('public'));
 
-// Database configuration with mongoose
-mongoose.connect("mongodb://localhost/mongooseScraper");
+//use handlebars as template
+var exphbs = require('express-handlebars');
+app.engine('handlebars', exphbs({
+  defaultLayout: 'main'
+}));
+app.set('view engine', 'handlebars');
+
+//database config with mongoose
+mongoose.connect('mongodb://localhost/huffpostScraper');
 var db = mongoose.connection;
 
-// Show any mongoose errors
-db.on("error", function(error) {
-  console.log("***MONGOOSE ERROR*** :", error);
+//show mongoose errors
+db.on('error', function(err){
+  console.log('**ERROR ERROR**', err);
 });
 
-// Once logged in to the db through mongoose, log a success message
-db.once("open", function() {
-  console.log("**MONGOOSE CONNECTED**");
+//show successful connection
+db.once('open', function(){
+  console.log('**MONGOOSE SUCCESSFULLY CONNECTED**');
 });
 
+///////////////////////////////////////////////
+///////////note & article models///////////////
+///////////////////////////////////////////////
+var Note = require('./model/note.js');
+var Article = require('./model/article.js');
 
-// Routes
-// ======
+////////////////////////////////////////////////
+/////////////////////routes/////////////////////
+////////////////////////////////////////////////
 
-// A GET request to scrape the echojs website
-app.get("/scrape", function(req, res) {
+//index routes
+app.get('/', function(req, res){
+  res.render('index')
+});
 
-  // First, we grab the body of the html with request
-  request("http://www.nytimes.com/pages/todayspaper/index.html", function(error, response, html) {
-
-    // Then, we load that into cheerio and save it to $ for a shorthand selector
+//get request to scrape
+app.get('/scrape', function(req, res){
+  //grab the body
+  request('http://www.huffingtonpost.com/', function(error, respose, html) {
+    //load into cheerio and save it to $
     var $ = cheerio.load(html);
-
-    // Now, we grab every h2 within an article tag, and do the following:
-      $('.story').each(function (i, element) {
-
-      // Save an empty result object
+    //grab every h2 within article tag
+    $('h2').each(function(i, element) {
+      //save to empty array
       var result = {};
-
-      // Add the text and href of every link, and save them as properties of the result object
-        result.title = $(this).children('h3').text();
-        result.articleNote = $(this).find('p').text();
-        result.text = $(this).children('p').text();
-        result.link = $(this).find('a').attr('href');
-        result.image = $(this).find('img').attr('src');
-
-
-      // Using our Article model, create a new entry
-      // This effectively passes the result object to the entry (and the title and link)
-      var entry = new Article(result);
-
-      // Now, save that entry to the db
-      entry.save(function(err, doc) {
-        // Log any errors
-        if (err) {
-          console.log(err);
+      //add text and href of all links save to result obj
+      result.title = $(this).children('a').text();
+      result.link = $(this).children('a').attr('href');
+      //using Article to create a new entry.
+      var entry = new Article (result);
+      console.log(entry);
+      //check for unique entry
+      Article.count({'title': entry.title}, function(err, count){
+        if(count>0){
+          console.log('**DUPLICATE**');
         }
-        // Or log the doc
         else {
-          console.log(doc);
+          entry.save(function(err, doc){
+            if (err) {
+              console.log(err);
+            }
+            else {
+              console.log(doc);
+            }
+          });
         }
       });
-
     });
   });
-  // Tell the browser that we finished scraping the text
-  res.send("SCRAPE COMPLETE!!");
+  res.send("**SCRAPE FINISHED**");
 });
 
-// This will get the articles we scraped from the mongoDB
-app.get("/articles", function(req, res) {
-  // Grab every doc in the Articles array
-  Article.find({}, function(error, doc) {
-    // Log any errors
-    if (error) {
-      console.log(error);
+//get scraped articles from mongodb
+app.get('/articles', function(req, res){
+  //grab docs from Articles array
+  Article.find({}, function(err, doc){
+    //log errors
+    if (err){
+      console.log(err);
     }
-    // Or send the doc to the browser as a json object
+    //send to doc as json
     else {
       res.json(doc);
     }
   });
 });
 
-// Grab an article by it's ObjectId
-app.get("/articles/:id", function(req, res) {
-  // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
-  Article.findOne({ "_id": req.params.id })
-  // ..and populate all of the notes associated with it
-  .populate("note")
-  // now, execute our query
-  .exec(function(error, doc) {
-    // Log any errors
-    if (error) {
-      console.log(error);
+//grab article by id
+app.get('articles/:id', function(req, res){
+  Article.findOne({'_id': req.params.id})
+  .populate('note')
+  .exec(function(err, doc){
+    if (err) {
+      console.log(err);
     }
-    // Otherwise, send the doc to the browser as a json object
     else {
       res.json(doc);
     }
   });
 });
 
-
-// Create a new note or replace an existing note
-app.post("/articles/:id", function(req, res) {
-  // Create a new note and pass the req.body to the entry
+//replace existing not with new once
+app.post('/articles/:id', function(req, res){
   var newNote = new Note(req.body);
-
-  // And save the new note the db
-  newNote.save(function(error, doc) {
-    // Log any errors
-    if (error) {
-      console.log(error);
+  //save the note to db
+  newNote.save(function(err, doc){
+    if (err){
+      console.log(err);
     }
-    // Otherwise
-    else {
-      // Use the article id to find and update it's note
-      Article.findOneAndUpdate({ "_id": req.params.id }, { "note": doc._id })
-      // Execute the above query
-      .exec(function(err, doc) {
-        // Log any errors
-        if (err) {
+    else{
+      Article.findOneAndUpdate({'_id': req.params.id}, {'note': doc._id})
+      .exec(function(err, doc){
+        if (err){
           console.log(err);
         }
         else {
-          // Or send the document to the browser
           res.send(doc);
         }
       });
@@ -164,8 +146,6 @@ app.post("/articles/:id", function(req, res) {
   });
 });
 
-
-// Listen on port 3002
-app.listen(3002, function() {
-  console.log("localhost/3002!");
+app.listen(process.env.PORT || 3002, function(){
+  console.log('**APP LIVE ON 3002**');
 });
