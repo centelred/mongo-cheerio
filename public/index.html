@@ -3,23 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <title>Huff Post Scraper</title>
-  <!--own css-->
-  <link rel="stylesheet" type="text/css" href="./assets/css/style.css">
   <!--bootstrap CDN-->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
-
-
+  <link rel="stylesheet" type="text/css" href="/assets/style.css">
 </head>
+
+
 <body>
+
+<div class="container">
   <div id="wrapper">
+    <div class="jumbotron text-center">
     <h1>Huff Post Scraper</h1>
-    <h4>Click on Article Title to save a note.</h4>
+    <h4>Click title to save a note.</h4>
+    </div>
+
     <hr>
+
     <div id="articles"></div>
-    <div id="notes"></div>
+    <div id="notes"> some text </div>
 
   </div>
+</div>
+
 
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>

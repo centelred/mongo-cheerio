@@ -1,7 +1,7 @@
 //grab articles as json
 $.getJSON('/articles', function(data){
   for (var i = 0; i<data.length; i++){
-    $('#articles').append('<p data-id="' + data[i]._id + '">' + data[i].title + '<br />'+ '</p>' + '<a href=' +data[i].link + '>'+data[i].link + '</a>');
+    $('#articles').append('<div class="newArticle"><h3 data-id="' + data[i]._id + '">' + data[i].title + '<br />'+ '</h3>' + '<a href="' +data[i].link + '" >'+ "<i>view full story</i>" + '</a></div><br>');
   }
 });
 //when a <p> tag is clicked
@@ -22,7 +22,7 @@ $(document).on('click', 'p', function(){
     //textarea to add new note body
     $('#notes').append('<textarea id="bodyinput" name="body"></textarea>');
     //button to submit new notes
-    $('#notes').append('<button class="btn btn-primary" data-id="' + data._id + '" id="savenote">Save</button>');
+    $('#notes').append('<button class="btn btn-primary" data-id="' + data._id + '" id="savenote">Save</button><br>');
 
     //if not in articles
     if(data.note){
